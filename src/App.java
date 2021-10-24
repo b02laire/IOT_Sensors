@@ -15,15 +15,25 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import network.Server;
+/**
+*Class App
+*Displays an interactive chart populated by data recovered via UDP
+*Inspired by "JavaFX Realtime Demo" by Kasun Vithanage
+*@see: https://levelup.gitconnected.com/realtime-charts-with-javafx-ed33c46b9c8d
 
+*/
 public class App extends Application {
-	final int WINDOW_SIZE = 20; 
+	final int WINDOW_SIZE = 20;
 	private ScheduledExecutorService scheduledExecutorService;
-	
-	 
+
+
     public static void main(String[] args) throws SocketException {
         launch(args);
     }
+		/**
+		*Start method
+		Used to initialize the JavaFX Chart as well as the server
+		*/
     public void start(Stage primaryStage) throws Exception {
     	Server server = new Server();
         primaryStage.setTitle("JavaFX Realtime Chart Demo");
@@ -49,41 +59,43 @@ public class App extends Application {
 
         // add series to chart
         lineChart.getData().add(series);
-        
+
         // setup scene
         Scene scene = new Scene(lineChart, 800, 600);
         primaryStage.setScene(scene);
-        
-     // this is used to display time in HH:mm:ss format
+
+     		// this is used to display time in HH:mm:ss format
         final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
-        
+
         // setup a scheduled executor to periodically put data into the chart
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        
-        // put dummy data onto graph per second
+
+        // All the code inside the scheduleAtFixedRate method will be executed every second
         scheduledExecutorService.scheduleAtFixedRate(() -> {
-            // get a random integer between 0-10
-        	Integer random = ThreadLocalRandom.current().nextInt(10);
-        	random = random+1;
-        	server.run();
+
+        	server.run(); // retrieiving data from the Sensor
             // Update the chart
             Platform.runLater(() -> {
                 // get current time
                 Date now = new Date();
-                // put random number with current time
-                String quote = new String(server.buffer, 0, server.response.getLength());
-                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), Integer.valueOf(quote)));
-                if (series.getData().size() > WINDOW_SIZE)
+                // put data with current time
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), server.PackettoInt()));
+								// Deleting values when reaching WINDOW_SIZE to avoid a crowded chart
+								if (series.getData().size() > WINDOW_SIZE)
                     series.getData().remove(0);
             });
         }, 0, 1, TimeUnit.SECONDS);
-        
-       
-    }    
+
+
+    }
+		/**
+		*Stop method
+		Called when the GUI is closed to stop the execution
+		*/
     @Override
     public void stop() throws Exception {
         super.stop();
         scheduledExecutorService.shutdownNow();
     }
-    
+
 }

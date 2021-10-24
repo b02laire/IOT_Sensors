@@ -1,2 +1,5 @@
+full_path=$(realpath $0)
+dir_path=$(dirname $full_path)
+
 cd src
-javac --module-path /home/b02laire/Documents/ENSEA/Java/javafx_eve/javafx-sdk-17.0.0.1/lib --add-modules javafx.controls App.java
+javac --module-path $dir_path/javafx-sdk-17.0.0.1/lib --add-modules javafx.controls App.java
